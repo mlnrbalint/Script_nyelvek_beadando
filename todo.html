@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .tag {
+            color: white;
+        }
+
+        .has-error {
+            color: tomato;
+        }
+
+        .closed {
+            opacity: 0.6;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="app">
+        <form @submit.prevent="save">
+            <div>
+                <Label class="TodoTitle">Todos</Label>
+                <br>
+                <input type="text" v-model="title" placeholder="Title"
+                    :class="{ 'has-error': errors.title.length > 0 }" />
+                <div v-if="errors.title.length > 0">
+                    {{ errors.title[0] }}
+                </div>
+            </div>
+            <div>
+                <label class="tag" v-for="l in defaultLabels" :style="{ 'background-color': l.color }">
+                    <input type="checkbox" :value="l.id" v-model="labels">
+                    {{ l.title }}
+                </label>
+            </div>
+            <div>
+                <textarea v-model="description" placeholder="Description"
+                    :class="{ 'has-error': errors.description.length > 0 }"></textarea>
+                <div v-if="errors.description.length > 0">
+                    {{ errors.description[0] }}
+                </div>
+            </div>
+            <button>Save</button>
+        </form>
+
+        <div>
+            <div v-for="i in issues" :class="{ 'closed': i.closed }">
+                <input type="checkbox" v-model="i.closed">
+                {{ i.title }}
+                <p>
+                    <span v-for="l in i.labels" class="tag" :style="{ 'background-color': getLabelById(l).color }">
+                        {{ getLabelById(l).title }}
+                    </span>
+                </p>
+                <div v-if="visibleDesc === i.id">
+                    {{ i.description }}
+                </div>
+                <button @click="toggleDescription(i.id)">
+                    Details
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script>
+        let app = new Vue({
+            el: '#app',
+            data: {
+                maxId: 1,
+                visibleDesc: null,
+                issues: [],
+                title: '',
+                labels: [],
+                description: '',
+                defaultLabels: [
+                    { id: 1, title: 'home', color: '#8b2424' },
+                    { id: 2, title: 'work', color: '#2c2c2c' },
+                    { id: 3, title: 'other', color: '#4c1eca' },
+                ],
+                errors: {
+                    title: [],
+                    description: [],
+                },
+            },
+            methods: {
+                save() {
+                    this.errors.title = []
+                    this.errors.description = []
+
+                    if (this.title === '') {
+                        this.errors.title.push('The title field is required')
+                    } else if (this.title.length < 10) {
+                        this.errors.title.push('The title field must be at least 10 characters long')
+                    }
+
+                    if (this.description === '') {
+                        this.errors.description.push('The description field is required')
+                    } else if (this.description.length > 1000) {
+                        this.errors.description.push('The description must be less than 1000 characters long')
+                    }
+
+                    if (this.errors.title.length > 0 || this.errors.description.length) {
+                        return
+                    }
+
+                    const issue = {
+                        id: this.maxId,
+                        title: this.title,
+                        description: this.description,
+                        labels: this.labels,
+                        closed: false,
+                    }
+
+                    this.title = ''
+                    this.description = ''
+                    this.labels = []
+
+                    this.issues.push(issue)
+
+                    this.maxId++
+                },
+                toggleDescription(id) {
+                    if (this.visibleDesc === id) {
+                        this.visibleDesc = null
+                    } else {
+                        this.visibleDesc = id
+                    }
+                },
+                getLabelById(id) {
+                    for (var i = 0; i < this.defaultLabels.length; i++) {
+                        if (id === this.defaultLabels[i].id) {
+                            return this.defaultLabels[i]
+                        }
+                    }
+                },
+            },
+        })
+    </script>
+</body>
+
+</html>
